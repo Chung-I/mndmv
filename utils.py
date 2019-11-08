@@ -1,3 +1,9 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import re
 import random
 from collections import Counter
@@ -8,7 +14,7 @@ import torch.nn as nn
 from torch.nn.init import *
 
 
-class ConllEntry:
+class ConllEntry(object):
     def __init__(self, id, form, lemma, cpos, pos, feats=None, parent_id=None, relation=None, deps=None, misc=None):
         self.id = id
         self.form = form
@@ -44,7 +50,7 @@ def memoize(func):
     mem = {}
 
     def helper(*args, **kwargs):
-        key = (args, frozenset(kwargs.items()))
+        key = (args, frozenset(list(kwargs.items())))
         if key not in mem:
             mem[key] = func(*args, **kwargs)
         return mem[key]
@@ -77,7 +83,7 @@ def constituent_index(sentence_length, multiroot):
                 id_2_span[counter_id] = (left_idx, right_idx, dir)
                 counter_id += 1
 
-    span_2_id = {s: id for id, s in id_2_span.items()}
+    span_2_id = {s: id for id, s in list(id_2_span.items())}
 
     for i in range(sentence_length):
         if i != 0:
@@ -130,7 +136,7 @@ def constituent_index(sentence_length, multiroot):
     return span_2_id, id_2_span, ijss, ikcs, ikis, kjcs, kjis, basic_span
 
 
-class data_sentence:
+class data_sentence(object):
     def __init__(self, id, entry_list):
         self.id = id
         self.entries = entry_list
@@ -141,11 +147,11 @@ class data_sentence:
         pos_list = list()
         for entry in self.entries:
             if words is not None:
-                if entry.norm in words.keys():
+                if entry.norm in list(words.keys()):
                     word_list.append(words[entry.norm])
                 else:
                     word_list.append(words['<UNKNOWN>'])
-            if entry.pos in pos.keys():
+            if entry.pos in list(pos.keys()):
                 pos_list.append(pos[entry.pos])
                 # else:
                 #     pos_list.append(pos['<UNKNOWN-POS>'])
@@ -271,7 +277,7 @@ def eval(predicted, gold, test_path, log_path, epoch):
                 correct_counter += 1
             total_counter += 1
     accuracy = float(correct_counter) / total_counter
-    print 'UAS is ' + str(accuracy * 100) + '%'
+    print('UAS is ' + str(accuracy * 100) + '%')
     f_w = open(test_path, 'w')
     for s, sentence in enumerate(gold):
         for entry in sentence.entries:
@@ -607,10 +613,10 @@ def eval_ml(predicted, gold, test_path, log_path, language_map, languages, epoch
             if ps[i] == e.parent_id:
                 correct_counter[lan_id] += 1
             total_counter[lan_id] += 1
-    accuracy = correct_counter / total_counter
-    for l in languages.keys():
-        print 'UAS is ' + str(accuracy[languages[l]] * 100) + '% for ' + l
-    print 'UAS is '+ str(np.mean(accuracy)*100)+ '% for average'
+    accuracy = old_div(correct_counter, total_counter)
+    for l in list(languages.keys()):
+        print('UAS is ' + str(accuracy[languages[l]] * 100) + '% for ' + l)
+    print('UAS is '+ str(np.mean(accuracy)*100)+ '% for average')
     # f_w = open(test_path, 'w')
     # for s, sentence in enumerate(gold):
     #     for entry in sentence.entries:
@@ -634,7 +640,7 @@ def eval_ml(predicted, gold, test_path, log_path, language_map, languages, epoch
         log = open(log_path, 'w')
         log.write("UAS for epoch " + str(epoch))
         log.write('\n')
-        for l in languages.keys():
+        for l in list(languages.keys()):
             log.write('\n')
             log.write(str(accuracy[languages[l]])+" "+l)
             log.write('\n')
@@ -645,7 +651,7 @@ def eval_ml(predicted, gold, test_path, log_path, language_map, languages, epoch
         log = open(log_path, 'a')
         log.write("UAS for epoch " + str(epoch))
         log.write('\n')
-        for l in languages.keys():
+        for l in list(languages.keys()):
             log.write('\n')
             log.write(str(accuracy[languages[l]])+" "+l)
             log.write('\n')

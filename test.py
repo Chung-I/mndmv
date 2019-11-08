@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import str
+from builtins import range
 import os
 import pickle
 from optparse import OptionParser
@@ -38,7 +41,7 @@ if __name__ == '__main__':
 
     if options.gpu >= 0 and torch.cuda.is_available():
         torch.cuda.set_device(options.gpu)
-        print 'To use gpu' + str(options.gpu)
+        print('To use gpu' + str(options.gpu))
 
     with open(os.path.join(options.output, options.params + '_' + str(options.sample_idx)), 'r') as paramsfp:
         w2i, pos, stored_opt = pickle.load(paramsfp)
@@ -52,7 +55,7 @@ if __name__ == '__main__':
         learned_model.trans_param, learned_model.decision_param, learned_model.lex_param, learned_model.tag_num = pickle.load(
             paramem)
 
-    print 'Model loaded'
+    print('Model loaded')
     learned_model.eval()
     outpath = os.path.join(options.output, 'test_pred' + '_' + str(options.sample_idx))
     eval_sentences = utils.read_data(options.test, True)

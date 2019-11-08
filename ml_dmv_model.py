@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import shutil
 
 import numpy as np
@@ -40,8 +43,8 @@ class ml_dmv_model(nn.Module):
         if self.sentence_predict:
             self.sentence_counter = {}
             self.sentence_decision_counter = {}
-            self.sentence_trans_param = np.zeros((data_size, len(pos.keys()), len(pos.keys()), 2, self.cvalency))
-            self.sentence_decision_param = np.zeros((data_size, len(pos.keys()), 2, self.dvalency, 2))
+            self.sentence_trans_param = np.zeros((data_size, len(list(pos.keys())), len(list(pos.keys())), 2, self.cvalency))
+            self.sentence_decision_param = np.zeros((data_size, len(list(pos.keys())), 2, self.dvalency, 2))
         else:
             self.sentence_trans_param = None
         # head_pos,child_pos,direction,child_valence,languages
@@ -62,7 +65,7 @@ class ml_dmv_model(nn.Module):
             self.rule_samples = list()
             self.decision_samples = list()
 
-        for p in pos.keys():
+        for p in list(pos.keys()):
             self.id_to_pos[self.pos[p]] = p
 
     # KM initialization
@@ -124,8 +127,8 @@ class ml_dmv_model(nn.Module):
         trans_sum = np.sum(self.trans_param, axis=1).reshape((len(self.pos), 1, 2, self.cvalency, len(self.languages)))
         decision_sum = np.sum(self.decision_param, axis=3).reshape(
             (len(self.pos), 2, self.dvalency, 1, len(self.languages)))
-        self.trans_param = self.trans_param / trans_sum
-        self.decision_param = self.decision_param / decision_sum
+        self.trans_param = old_div(self.trans_param, trans_sum)
+        self.decision_param = old_div(self.decision_param, decision_sum)
 
     def update_decision(self, change, norm_counter, entries, lan_id):
         word_num, _ = change.shape
@@ -152,7 +155,7 @@ class ml_dmv_model(nn.Module):
         for l in range(len(self.languages)):
             for i in range(len(all_param[:, l])):
                 if all_param[i, l] > 0:
-                    ratio[l] = -all_param[i, l] / all_norm[i, l]
+                    ratio[l] = old_div(-all_param[i, l], all_norm[i, l])
                     if all_norm[i, l] < 0 and es[l] > ratio[l]:
                         es[l] = ratio[l]
         return es
@@ -326,8 +329,8 @@ class ml_dmv_model(nn.Module):
         trans_counter[:, root_idx, :, :] = 0
         child_sum = np.sum(trans_counter, axis=1).reshape(len(self.pos), 1, 2, self.cvalency, len(self.languages))
         decision_sum = np.sum(decision_counter, axis=3).reshape(len(self.pos), 2, self.dvalency, 1, len(self.languages))
-        self.trans_param = trans_counter / child_sum
-        self.decision_param = decision_counter / decision_sum
+        self.trans_param = old_div(trans_counter, child_sum)
+        self.decision_param = old_div(decision_counter, decision_sum)
         return
 
     def update_pseudo_count(self, inside_incomplete_table, inside_complete_table, sentence_prob,

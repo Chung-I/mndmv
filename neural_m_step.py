@@ -1,3 +1,8 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -194,7 +199,7 @@ class m_step_model(nn.Module):
                 one_batch_size = len(batched_input_decision[i])
                 if self.unified_network:
                     one_batch_input_decision_pos = torch.LongTensor(
-                        map(lambda p: from_decision[p], np.array(batched_input_decision[i])[:, 0]))
+                        [from_decision[p] for p in np.array(batched_input_decision[i])[:, 0]])
                 else:
                     one_batch_input_decision_pos = torch.LongTensor(batched_input_decision[i])[:, 0]
                 one_batch_decision_dir = torch.LongTensor(batched_input_decision[i])[:, 1]
@@ -202,7 +207,7 @@ class m_step_model(nn.Module):
                 if self.unified_network:
                     one_batch_input_decision_pos_index = np.array(one_batch_input_decision_pos).tolist()
                     one_batch_input_decision_pos_index = np.array(
-                        map(lambda p: to_decision[p], one_batch_input_decision_pos_index))
+                        [to_decision[p] for p in one_batch_input_decision_pos_index])
                 else:
                     one_batch_input_decision_pos_index = np.array(batched_input_decision[i])[:, 0]
                 one_batch_decision_dir_index = np.array(batched_input_decision[i])[:, 1]
@@ -223,16 +228,16 @@ class m_step_model(nn.Module):
         if child_only:
             decision_counter = decision_counter + self.param_smoothing
             decision_sum = np.sum(decision_counter, axis=4, keepdims=True)
-            decision_param = decision_counter / decision_sum
+            decision_param = old_div(decision_counter, decision_sum)
         decision_counter = decision_counter + self.param_smoothing
         decision_sum = np.sum(decision_counter, axis=4, keepdims=True)
-        decision_param_compare = decision_counter / decision_sum
+        decision_param_compare = old_div(decision_counter, decision_sum)
         decision_difference = decision_param_compare - decision_param
         if not self.child_only:
-            print 'distance for decision in this iteration '+str(LA.norm(decision_difference))
+            print('distance for decision in this iteration '+str(LA.norm(decision_difference)))
         trans_counter = trans_counter + self.param_smoothing
         child_sum = np.sum(trans_counter, axis=(1, 3), keepdims=True)
-        trans_param_compare = trans_counter / child_sum
+        trans_param_compare = old_div(trans_counter, child_sum)
         #trans_difference = trans_param_compare - trans_param
         #print 'distance for trans in this iteration ' + str(LA.norm(trans_difference))
         return trans_param, decision_param

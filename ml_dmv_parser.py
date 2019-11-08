@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import str
+from builtins import range
 import os
 import pickle
 import sys
@@ -89,10 +92,10 @@ if __name__ == '__main__':
 
 
     def do_eval(dmv_model, m_model, pos, languages, language_map, epoch, options):
-        print "===================================="
-        print 'Do evaluation'
+        print("====================================")
+        print('Do evaluation')
         if not options.eval_new_language:
-            eval_language_set = languages.keys()
+            eval_language_set = list(languages.keys())
             eval_languages = languages
         else:
             eval_language_set = utils.read_language_list(options.language_path)
@@ -110,7 +113,7 @@ if __name__ == '__main__':
         parse_results = {}
         classify_results = np.zeros(len(eval_data_list))
         if options.sentence_predict and epoch > options.non_neural_iter:
-            eval_trans_param = np.zeros((len(eval_data_list), len(pos.keys()), len(pos.keys()), 2, options.c_valency))
+            eval_trans_param = np.zeros((len(eval_data_list), len(list(pos.keys())), len(list(pos.keys())), 2, options.c_valency))
         else:
             eval_trans_param = None
         for batch_id, one_batch in enumerate(eval_batch_data):
@@ -165,7 +168,7 @@ if __name__ == '__main__':
         utils.eval_ml(parse_results, eval_sentences, devpath, options.log + '_dev' + str(options.sample_idx),
                       eval_language_map, eval_languages, epoch)
         # utils.write_distribution(dmv_model)
-        print "===================================="
+        print("====================================")
         # language classification results
         if not options.eval_new_language and (options.sentence_predict or options.language_predict):
             correct = 0
@@ -173,12 +176,12 @@ if __name__ == '__main__':
                 if classify_results[i] == languages[eval_language_map[i]]:
                     correct += 1
             correct_rate = float(correct) / len(classify_results)
-            print "Language classification accuracy " + str(correct_rate)
+            print("Language classification accuracy " + str(correct_rate))
 
 
     if options.gpu >= 0 and torch.cuda.is_available():
         torch.cuda.set_device(options.gpu)
-        print 'To use gpu' + str(options.gpu)
+        print('To use gpu' + str(options.gpu))
 
     chosen_list = ['en', 'de', 'nl', 'it', 'fr', 'la_ittb', 'no', 'bg', 'sl', 'grc',
                    'eu', 'et', 'fi', 'hi', 'ja']
@@ -194,25 +197,25 @@ if __name__ == '__main__':
     sentence_language_map = {}
     if options.concat_all:
         languages = {'all': 0}
-        for s in language_map.keys():
+        for s in list(language_map.keys()):
             language_map[s] = 'all'
-    print 'Data read'
+    print('Data read')
     with open(os.path.join(options.output, options.params + '_' + str(options.sample_idx)), 'w') as paramsfp:
         pickle.dump((pos, options), paramsfp)
-    print 'Parameters saved'
+    print('Parameters saved')
 
     data_list, data_pos, sentence_map = utils.construct_ml_pos_data(sentences, pos, languages, language_map)
     batch_data = utils.construct_update_batch_data(data_list, options.batchsize)
-    print 'Batch data constructed'
+    print('Batch data constructed')
     data_size = len(data_list)
 
     ml_dmv_model = MLDMV(pos, sentence_map, languages, language_map, data_size, options)
 
-    print 'Model constructed'
+    print('Model constructed')
 
     ml_dmv_model.init_param(sentences)
 
-    print 'Parameters initialized'
+    print('Parameters initialized')
     if options.gpu >= 0 and torch.cuda.is_available():
         torch.cuda.set_device(options.gpu)
         ml_dmv_model.cuda(options.gpu)
@@ -223,15 +226,15 @@ if __name__ == '__main__':
         m_model = None
 
     for epoch in range(options.epochs):
-        print "\n"
-        print "Training epoch " + str(epoch)
+        print("\n")
+        print("Training epoch " + str(epoch))
         ml_dmv_model.train()
         en_likehood = 0.0
         training_likelihood = 0.0
         trans_counter = np.zeros(
-            (len(pos.keys()), len(pos.keys()), 2, options.c_valency, len(languages)))  # p c d v l
+            (len(list(pos.keys())), len(list(pos.keys())), 2, options.c_valency, len(languages)))  # p c d v l
         # head_pos,head_tag,direction,decision_valence,decision,languages
-        decision_counter = np.zeros((len(pos.keys()), 2, options.d_valency, 2, len(languages)))  # p d v stop l
+        decision_counter = np.zeros((len(list(pos.keys())), 2, options.d_valency, 2, len(languages)))  # p d v stop l
         random.shuffle(batch_data)
         tot_batch = len(batch_data)
         if options.use_neural:
@@ -255,7 +258,7 @@ if __name__ == '__main__':
             training_likelihood += batch_likelihood
         if epoch > options.non_neural_iter:
             ml_dmv_model.initial_flag = False
-        print 'Likelihood for this iteration', training_likelihood
+        print('Likelihood for this iteration', training_likelihood)
         # M-step
         # Using neural networks to update DMV parameters
         if options.use_neural:
@@ -288,4 +291,4 @@ if __name__ == '__main__':
     ml_dmv_model.save(os.path.join(options.output, os.path.basename(options.model) + str(epoch + 1) + '_' + str(
         options.sample_idx)))
 
-print 'Training finished'
+print('Training finished')

@@ -1,3 +1,8 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -297,7 +302,7 @@ class m_step_model(nn.Module):
         else:
             decision_counter = decision_counter + self.param_smoothing
             decision_sum = np.sum(decision_counter, axis=3, keepdims=True)
-            decision_param = decision_counter / decision_sum
+            decision_param = old_div(decision_counter, decision_sum)
         return trans_param, decision_param
 
     def batch_training(self, rule_samples, decision_samples, data_pos):
@@ -315,7 +320,7 @@ class m_step_model(nn.Module):
             tot_batch = batch_num
 
             # for batch_id in range(batch_num):
-            for batch_id in tqdm(range(batch_num), mininterval=2,
+            for batch_id in tqdm(list(range(batch_num)), mininterval=2,
                                  desc=' -Tot it %d (epoch %d)' % (tot_batch, 0), leave=False, file=sys.stdout):
                 # Input for the network: head_pos,direction, valency
                 batch_input_pos_v = torch.LongTensor(batch_input_data['input_pos'][batch_id])
@@ -348,15 +353,15 @@ class m_step_model(nn.Module):
                 batch_loss.backward()
                 self.optim.step()
                 self.optim.zero_grad()
-            print "child loss for this iteration is " + str(iter_loss.detach().data.numpy() / batch_num)
+            print("child loss for this iteration is " + str(old_div(iter_loss.detach().data.numpy(), batch_num)))
             if self.sentence_predict or self.language_predict:
-                print "language loss for this iteration is " + str(iter_lang_loss.detach().data.numpy() / batch_num)
+                print("language loss for this iteration is " + str(old_div(iter_lang_loss.detach().data.numpy(), batch_num)))
             if not self.child_only:
                 decision_batch_num = len(batch_decision_data['decision_pos'])
                 tot_batch = decision_batch_num
                 iter_decision_loss = 0.0
                 for decision_batch_id in tqdm(
-                        range(decision_batch_num), mininterval=2,
+                        list(range(decision_batch_num)), mininterval=2,
                         desc=' -Tot it %d (iter %d)' % (tot_batch, 0), leave=False, file=sys.stdout):
                     # Input for decision network: pos,direction,decision_valency
                     batch_decision_pos_v = torch.LongTensor(batch_decision_data['decision_pos'][decision_batch_id])
@@ -388,5 +393,5 @@ class m_step_model(nn.Module):
                     batch_decision_loss.backward()
                     self.optim.step()
                     self.optim.zero_grad()
-                print "decision loss for this iteration is " + str(
-                    iter_decision_loss.detach().data.numpy() / batch_num)
+                print("decision loss for this iteration is " + str(
+                    old_div(iter_decision_loss.detach().data.numpy(), batch_num)))
