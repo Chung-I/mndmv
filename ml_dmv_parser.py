@@ -200,7 +200,7 @@ if __name__ == '__main__':
         for s in list(language_map.keys()):
             language_map[s] = 'all'
     print('Data read')
-    with open(os.path.join(options.output, options.params + '_' + str(options.sample_idx)), 'w') as paramsfp:
+    with open(os.path.join(options.output, options.params + '_' + str(options.sample_idx)), 'wb') as paramsfp:
         pickle.dump((pos, options), paramsfp)
     print('Parameters saved')
 
